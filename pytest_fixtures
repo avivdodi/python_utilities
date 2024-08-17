@@ -1,0 +1,41 @@
+### conftest.py:###
+
+
+import pytest
+import logging
+import os
+from datetime import datetime
+
+@pytest.fixture(scope='session', autouse=True)
+def setup_logging():
+    # Generate a timestamped log file name
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    log_file = f'test_logs_{timestamp}.log'
+
+    # Ensure the log file is created fresh for each test session
+    if os.path.exists(log_file):
+        os.remove(log_file)
+
+    # Configure logging
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    
+    # Create handlers for stdout and file
+    stdout_handler = logging.StreamHandler()
+    file_handler = logging.FileHandler(log_file)
+    
+    # Create and set formatter for handlers
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    stdout_handler.setFormatter(formatter)
+    file_handler.setFormatter(formatter)
+    
+    # Add handlers to the logger
+    logger.addHandler(stdout_handler)
+    logger.addHandler(file_handler)
+    
+    # Yield to tests
+    yield
+    
+    # Clean up after tests
+    logger.removeHandler(stdout_handler)
+    logger.removeHandler(file_handler)
